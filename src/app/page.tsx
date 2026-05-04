@@ -1,0 +1,159 @@
+import Link from "next/link";
+import { CountdownPanel } from "@/components/CountdownPanel";
+import { GlitchText } from "@/components/GlitchText";
+import { IterationCard, type IterationVisualState } from "@/components/IterationCard";
+import { IterationTimeline } from "@/components/IterationTimeline";
+import { RuleGrid } from "@/components/RuleGrid";
+import { SystemStatusBar } from "@/components/SystemStatusBar";
+import { TerminalHero } from "@/components/TerminalHero";
+import { WaitlistForm } from "@/components/WaitlistForm";
+import { getProducts, getSiteSettings } from "@/lib/data/catalog";
+import { isValidCountdownTarget } from "@/lib/env";
+import { formatUsd } from "@/lib/format";
+import { isSoldOut } from "@/lib/product-state";
+import type { ProductRow } from "@/lib/types";
+
+export const dynamic = "force-dynamic";
+
+const RULES = [
+  "NO HUMAN DESIGN INPUT",
+  "50 UNITS PER ITERATION",
+  "NO RESTOCKS",
+  "DEPLETION TRIGGERS SUCCESSOR VERSION",
+  "HUMAN INVOLVEMENT LIMITED TO PRODUCTION + FULFILLMENT",
+] as const;
+
+function pickVisual(product: Pick<ProductRow, "status" | "active" | "total_inventory" | "units_sold">): IterationVisualState {
+  if (product.status === "locked") return "locked";
+  if (isSoldOut(product)) return "archived";
+  if (product.status === "active" && product.active) return "active";
+  return "sold_out";
+}
+
+export default async function HomePage() {
+  const settings = await getSiteSettings();
+  const products = await getProducts();
+  const configured = Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+
+  const blackout = settings?.blackout_mode ?? true;
+  const countdownOn = Boolean(
+    settings?.countdown_enabled && settings?.countdown_target && isValidCountdownTarget(settings.countdown_target),
+  );
+  const nd01 = products.find((p) => p.slug === "nd-01-base-error-tee");
+  const nd02 = products.find((p) => p.slug === "nd-02-signal-decay-tee");
+
+  return (
+    <div className="space-y-16 sm:space-y-20">
+      {!configured ? (
+        <div className="border border-amber-500/40 bg-amber-500/5 px-4 py-3 font-mono text-[11px] uppercase tracking-[0.16em] text-amber-200">
+          Supabase environment variables missing. Public catalog reads will fail until configured.
+        </div>
+      ) : null}
+
+      {blackout ? (
+        <>
+          <TerminalHero mode="blackout" />
+          <section className="mx-auto max-w-xl space-y-6">
+            {countdownOn && settings?.countdown_target ? <CountdownPanel targetIso={settings.countdown_target} /> : null}
+            <div className="border border-[rgba(255,255,255,0.12)] bg-[#0A0A0A] p-6">
+              <p className="mb-4 font-mono text-[10px] uppercase tracking-[0.28em] text-[#9CA3AF]">Receive transmission</p>
+              <WaitlistForm source="homepage_blackout" />
+            </div>
+          </section>
+        </>
+      ) : (
+        <>
+          <TerminalHero mode="live" />
+          <SystemStatusBar lines={["RELEASE AUTHORIZED", "INVENTORY ACTIVE", "REPLENISHMENT DISABLED"]} />
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <Link
+              href="/drop/current"
+              className="inline-flex flex-1 items-center justify-center border border-[rgba(255,255,255,0.12)] bg-[#F5F5F5] px-4 py-3 text-center font-mono text-[11px] font-medium uppercase tracking-[0.22em] text-[#050505] transition hover:bg-[#00FF9C]"
+            >
+              Enter current iteration
+            </Link>
+            <Link
+              href="/waitlist"
+              className="inline-flex flex-1 items-center justify-center border border-[rgba(255,255,255,0.12)] bg-[#0A0A0A] px-4 py-3 text-center font-mono text-[11px] uppercase tracking-[0.22em] text-[#F5F5F5] transition hover:border-[#00FF9C]/55 hover:text-[#00FF9C]"
+            >
+              Receive next transmission
+            </Link>
+          </div>
+
+          <section className="space-y-4">
+            <div className="flex items-end justify-between gap-4">
+              <h2 className="font-[family-name:var(--font-display)] text-2xl tracking-tight text-[#F5F5F5] sm:text-3xl">
+                <GlitchText as="span">Current iteration preview</GlitchText>
+              </h2>
+            </div>
+            {nd01 ? (
+              <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+                <IterationCard
+                  product={nd01}
+                  href="/drop/current"
+                  visual={pickVisual(nd01)}
+                  footnote="Access governed by inventory state."
+                />
+                <div className="space-y-4 border border-[rgba(255,255,255,0.12)] bg-[#0A0A0A] p-5">
+                  <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[#9CA3AF]">Commerce</p>
+                  <p className="text-sm text-[#9CA3AF]">{nd01.description}</p>
+                  <div className="flex flex-wrap items-center gap-3 font-mono text-[11px] uppercase tracking-[0.16em] text-[#F5F5F5]">
+                    <span>{formatUsd(nd01.price_cents)}</span>
+                    <span className="text-[#9CA3AF]">Cap 50 units</span>
+                    <span className="border border-[rgba(255,255,255,0.12)] px-2 py-1 text-[#00FF9C]">
+                      {isSoldOut(nd01) ? "SOLD OUT" : "ACTIVE"}
+                    </span>
+                  </div>
+                  <Link
+                    href="/drop/current"
+                    className="inline-flex border border-[rgba(255,255,255,0.12)] px-4 py-2 font-mono text-[11px] uppercase tracking-[0.2em] text-[#F5F5F5] transition hover:border-[#00FF9C]/55 hover:text-[#00FF9C]"
+                  >
+                    Open drop
+                  </Link>
+                </div>
+              </div>
+            ) : (
+              <p className="text-sm text-[#9CA3AF]">Catalog sync pending.</p>
+            )}
+          </section>
+
+          <section className="space-y-4">
+            <h2 className="font-[family-name:var(--font-display)] text-2xl tracking-tight text-[#F5F5F5] sm:text-3xl">
+              System rules
+            </h2>
+            <RuleGrid rules={[...RULES]} />
+          </section>
+
+          <section className="grid gap-6 lg:grid-cols-2">
+            <div className="space-y-3">
+              <h2 className="font-[family-name:var(--font-display)] text-2xl tracking-tight text-[#F5F5F5]">Process</h2>
+              <IterationTimeline />
+            </div>
+            <div className="space-y-3">
+              <h2 className="font-[family-name:var(--font-display)] text-2xl tracking-tight text-[#F5F5F5]">Next iteration</h2>
+              {nd02 ? (
+                <div className="border border-[rgba(255,255,255,0.12)] bg-[#0A0A0A] p-5">
+                  <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[#9CA3AF]">Successor</p>
+                  <p className="mt-2 font-[family-name:var(--font-display)] text-2xl text-[#F5F5F5]">{nd02.name}</p>
+                  <p className="mt-2 font-mono text-[11px] uppercase tracking-[0.18em] text-[#6B7280]">Status: LOCKED</p>
+                  <p className="mt-3 text-sm text-[#9CA3AF]">Access condition not yet met.</p>
+                  <Link
+                    href="/waitlist"
+                    className="mt-5 inline-flex border border-[rgba(255,255,255,0.12)] px-4 py-2 font-mono text-[11px] uppercase tracking-[0.2em] text-[#F5F5F5] transition hover:border-[#00FF9C]/55 hover:text-[#00FF9C]"
+                  >
+                    Join next iteration
+                  </Link>
+                </div>
+              ) : null}
+            </div>
+          </section>
+
+          <section className="border border-[rgba(255,255,255,0.12)] bg-[#0A0A0A] p-6">
+            <p className="mb-4 font-mono text-[10px] uppercase tracking-[0.28em] text-[#9CA3AF]">Transmission list</p>
+            <WaitlistForm source="homepage_live" />
+          </section>
+        </>
+      )}
+    </div>
+  );
+}
