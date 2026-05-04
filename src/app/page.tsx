@@ -44,7 +44,7 @@ export default async function HomePage() {
 
   return (
     <div className="space-y-16 sm:space-y-20">
-      {!configured ? (
+      {!configured && process.env.NODE_ENV === "development" ? (
         <div className="border border-amber-500/40 bg-amber-500/5 px-4 py-3 font-mono text-[11px] uppercase tracking-[0.16em] text-amber-200">
           Supabase environment variables missing. Public catalog reads will fail until configured.
         </div>
