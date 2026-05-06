@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { CountdownPanel } from "@/components/CountdownPanel";
+import { PrelaunchLanding } from "@/components/PrelaunchLanding";
 import { GlitchText } from "@/components/GlitchText";
 import { IterationCard, type IterationVisualState } from "@/components/IterationCard";
 import { IterationTimeline } from "@/components/IterationTimeline";
@@ -31,6 +32,16 @@ function pickVisual(product: Pick<ProductRow, "status" | "active" | "total_inven
 }
 
 export default async function HomePage() {
+  const prelaunchMode = process.env.PRELAUNCH_MODE === "true";
+  const prelaunchTargetIso =
+    process.env.PRELAUNCH_TARGET_ISO && process.env.PRELAUNCH_TARGET_ISO.trim().length > 0
+      ? process.env.PRELAUNCH_TARGET_ISO.trim()
+      : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+
+  if (prelaunchMode) {
+    return <PrelaunchLanding targetIso={prelaunchTargetIso} />;
+  }
+
   const settings = await getSiteSettings();
   const products = await getProducts();
   const configured = Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);

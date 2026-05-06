@@ -81,6 +81,15 @@ stripe listen --forward-to http://localhost:3000/api/webhooks/stripe
   - In Supabase, set `products.units_sold` to 50 (for the current product), or run 50 test purchases.
   - Reload `/drop/current` and confirm the UI shows `SOLD OUT` and checkout is blocked.
 
+## Prelaunch landing toggle (temporary)
+
+The homepage can be temporarily replaced with a pre-launch landing screen without deleting the real homepage.
+
+- **Enable**: set `PRELAUNCH_MODE=true`
+- **Optional countdown target**: set `PRELAUNCH_TARGET_ISO` to an ISO datetime string (e.g. `2026-06-05T00:00:00.000Z`).
+  - If omitted, it defaults to **30 days from server time** at request time.
+- **Disable at launch**: remove the env var or set `PRELAUNCH_MODE=false` and redeploy.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:
