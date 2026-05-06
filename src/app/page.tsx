@@ -32,7 +32,8 @@ function pickVisual(product: Pick<ProductRow, "status" | "active" | "total_inven
 }
 
 export default async function HomePage() {
-  const prelaunchMode = process.env.PRELAUNCH_MODE === "true";
+  const prelaunchModeRaw = process.env.PRELAUNCH_MODE?.trim().toLowerCase() ?? "";
+  const prelaunchMode = ["true", "1", "yes", "on"].includes(prelaunchModeRaw);
   const prelaunchTargetIso =
     process.env.PRELAUNCH_TARGET_ISO && process.env.PRELAUNCH_TARGET_ISO.trim().length > 0
       ? process.env.PRELAUNCH_TARGET_ISO.trim()
