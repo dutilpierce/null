@@ -90,6 +90,13 @@ The homepage can be temporarily replaced with a pre-launch landing screen withou
   - If omitted, it defaults to **30 days from server time** at request time.
 - **Disable at launch**: remove the env var or set `PRELAUNCH_MODE=false` and redeploy.
 
+**Vercel tips**
+
+- After changing env vars, you must **Redeploy** (Vercel shows a toast prompting this).
+- If a variable is marked **Sensitive**, the value field stays **blank** after save—that is normal; the runtime still receives the value.
+- Confirm what production sees under **`/api/health`** (JSON includes `prelaunch.enabled`) or open **`/health`** in the browser.
+- If **`/api/prelaunch` returns 404**, that deployment does not include the latest code—redeploy from the latest `main` branch.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:
