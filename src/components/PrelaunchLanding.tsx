@@ -29,11 +29,8 @@ export function PrelaunchLanding({ targetIso }: PrelaunchLandingProps) {
         <h1 className="font-[family-name:var(--font-display)] text-4xl font-semibold tracking-tight text-[#F5F5F5] sm:text-6xl">
           Something rare is coming.
         </h1>
-        <p className="mx-auto mt-5 max-w-xl text-sm leading-relaxed text-[#9CA3AF] sm:text-base">
-          NULL//DIVISION opens with a controlled first release. Access arrives in a short window, then disappears.
-        </p>
 
-        <div className="mx-auto mt-8 flex max-w-xl flex-col gap-3 sm:flex-row sm:justify-center">
+        <div className="mx-auto mt-7 flex max-w-xl flex-col gap-3 sm:flex-row sm:justify-center">
           <Link
             href="#early-access"
             className="inline-flex items-center justify-center border border-[rgba(255,255,255,0.12)] bg-[#F5F5F5] px-5 py-3 text-center font-mono text-[11px] font-medium uppercase tracking-[0.22em] text-[#050505] transition hover:bg-[#00FF9C]"
